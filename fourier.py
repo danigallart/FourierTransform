@@ -1,29 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-#Boundary conditions 
-rangt = 500                 #number of points for time domain
-rangw = 500                 #number of points for frequency domain
-wi = -2                       #initial frequency of the frequency domain
-wf = 2                        #final frequency of the freqeucny domain
-ti = -100                       #initial time of the time domain
-tf = 100                        #final time of the time domain
-
-            
-t = np.linspace(ti,tf,rangt)  #time
-#f = np.cos(2.0*np.pi*(3.0*t))*np.exp(-np.pi*t**2) #function to be transformed
-f = np.sin(t)
-real_function = np.zeros(rangt) #in principle we should recover f if it was real
-im_function = np.zeros(rangt) #imaginary part of the antitransform
-
-real_fourier = np.zeros(rangw) #real part of the Fourier transform
-im_fourier = np.zeros(rangw)   #imaginary part of the Fourier transform
-w = np.linspace(wi,wf,rangw)   #frequency
 
 def ftransform(f,t,rangt,rangw,w,j):
     reftransform = 0.0
     #dt = np.diff(t)
-    dt = (tf-ti)/rangt
+    dt = (t[-1]-t[0])/rangt
 
     for i in range(1,rangt):
         reftransform += f[i]*np.cos(2.*np.pi*w[j]*t[i])*dt
@@ -39,7 +21,7 @@ def ftransform(f,t,rangt,rangw,w,j):
 
 def anti_ftransform(real_fourier,im_fourier,rangw,rangt,w,t,j):
     anti_reftransform = 0.0
-    dw = (wf-wi)/rangw
+    dw = (w[-1]-w[0])/rangw
 
     for i in range(1,rangw):
         anti_reftransform += real_fourier[i]*np.cos(2.*np.pi*w[i]*t[j])*dw + -im_fourier[i]*np.sin(2.*np.pi*w[i]*t[j])*dw
@@ -55,12 +37,34 @@ def anti_ftransform(real_fourier,im_fourier,rangw,rangt,w,t,j):
 
     return anti_reftransform, anti_imftransform
 
+def plot_fourier(f, t, w, real_fourier, im_fourier, real_function, im_function):
+    fig, axes = plt.subplots(2,3,figsize=(20,20))
+    axes[0,0].plot(t,f)
+    axes[0,0].set_title('Function to transform')
+    axes[0,0].set_xlabel('time (s)')
+
+    axes[0,1].plot(2.*np.pi*w,real_fourier)
+    axes[0,1].set_title('Re[Fourier]')
+    axes[0,1].set_xlabel('w (rad/s)')
+
+    axes[0,2].plot(2.*np.pi*w,im_fourier)
+    axes[0,2].set_title('Im[Fourier]')
+    axes[0,2].set_xlabel('w (rad/s)')
+
+    axes[1,0].plot(t,real_function)
+    axes[1,0].set_title('Re[AntiFourier]')
+    axes[1,0].set_xlabel('time (s)')
+
+    axes[1,1].plot(t,im_function)
+    axes[1,1].set_title('Im[AntiFourier]')
+    axes[1,1].set_xlabel('time (s)')
+
+    axes[1,2].plot(t,f)
+    axes[1,2].plot(t,real_function)
+    axes[1,2].plot(t,im_function)
+    axes[1,2].set_title('Comparison Anti vs Function')
+    axes[1,2].set_xlabel('time (s)')
 
 
-#Initiate the Fourier transform
+    plt.show()
 
-for i in range(rangw):
-    real_fourier[i], im_fourier[i] = ftransform(f,t,rangt,rangw,w,i) 
-
-for i in range(rangt):
-    real_function[i], im_function[i] = anti_ftransform(real_fourier, im_fourier, rangw, rangt, w, t, i)
